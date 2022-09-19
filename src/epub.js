@@ -14,7 +14,7 @@ export default epubGot.then(() => ({
   author: epubGetter.metadata.creator,
   toc: toc_formatter(epubGetter),
   get_file: path =>
-    epubGetter.zip.names.includes(path) ? epubGetter.zip.admZip.readAsText(path) : undefined
+    epubGetter.zip.names.includes(path) ? epubGetter.zip.admZip.readFile(path) : undefined
 }))
 .catch(e => {throw e})
 
