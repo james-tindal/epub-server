@@ -1,0 +1,9 @@
+
+<li>
+  <a href="{{ this.href }}">{{ this.title }}</a>
+  <ul>
+    {{#each this.children}}
+      {{> partials/tocitem}}
+    {{/each}}
+  </ul>
+</li>
