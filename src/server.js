@@ -8,7 +8,15 @@ const { render, send, status, type } = server.reply
 const epub = await get_epub
 const pagination_js = await fs.readFile(path.resolve('src/client.js'), 'utf8')
 
-server({ port: 8080, views: 'src/views', favicon: 'public/favicon.ico' }, [
+let init_ctx
+server.plugins.push({
+  name: 'Context stealer',
+  init: ctx => init_ctx = ctx
+})
+
+const app =
+server({ port: 8000, views: 'src/views', favicon: 'public/favicon.ico' }, [
+  console.log.bind(console),
   get('/', ctx => render('toc.hbs', epub)),
   ctx => {
     const path = ctx.path.slice(1)
@@ -33,5 +41,16 @@ server({ port: 8080, views: 'src/views', favicon: 'public/favicon.ico' }, [
                        type(ext).send(file) )}
   ],
 )
-.then(app => console.log(`Listening on http://localhost:${app.options.port}`))
+.catch(function retry(err) {
+  if (err.code !== 'EADDRINUSE') throw err
+  console.log(`Address in use, retrying on port ${++init_ctx.options.port}`)
+  const promise = new Promise((resolve, reject) => {
+    const server = init_ctx.server.listen(init_ctx.options.port)
+    server.on('listening', resolve)
+    server.on('error', reject)
+  })
+  return promise.then(() => init_ctx, retry)
+})
+.then(ctx => console.log(`Listening on http://localhost:${ctx.options.port}`))
+.catch(e => { throw e })
 

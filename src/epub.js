@@ -1,10 +1,9 @@
 import { once } from 'node:events'
 import EPub from 'epub'
-const pathToFile = process.argv[2]
-if (pathToFile === undefined) throw Error('Provide a file path')
+import { file_path } from './cli.js'
 
 
-const epubGetter = new EPub(pathToFile)
+const epubGetter = new EPub(file_path)
 const epubGot = once(epubGetter, 'end')
 epubGetter.parse()
 
