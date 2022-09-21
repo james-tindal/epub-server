@@ -16,7 +16,6 @@ server.plugins.push({
 
 const app =
 server({ port: 8000, views: 'src/views', favicon: 'public/favicon.ico' }, [
-  console.log.bind(console),
   get('/', ctx => render('toc.hbs', epub)),
   ctx => {
     const path = ctx.path.slice(1)
