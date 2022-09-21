@@ -8,13 +8,17 @@ const epubGetter = new EPub(pathToFile)
 const epubGot = once(epubGetter, 'end')
 epubGetter.parse()
 
-
 export default epubGot.then(() => ({
   title: epubGetter.metadata.title,
   author: epubGetter.metadata.creator,
   toc: toc_formatter(epubGetter),
   get_file: path =>
-    epubGetter.zip.names.includes(path) ? epubGetter.zip.admZip.readFile(path) : undefined
+    epubGetter.zip.names.includes(path) ? epubGetter.zip.admZip.readFile(path) : undefined,
+  get_pagination: path => {
+    const { flow } = epubGetter
+    const i = flow.findIndex(x => x.href == path)
+    return { previous: flow[i-1]?.href, next: flow[i+1]?.href }
+  }
 }))
 .catch(e => {throw e})
 
