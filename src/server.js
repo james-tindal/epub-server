@@ -22,6 +22,8 @@ server({ port: 8000, views: 'src/views', favicon: 'public/favicon.ico' }, [
     const file = epub.get_file(path)
     const ext = path.match(/.\.([^.]*)$/)?.[1]
 
+    const is_html = ext => ['html', 'xhtml', 'htm'].includes(ext)
+
     const script_template = ({ previous, next }, js) =>
       `<script id="pagination" type="application/json">
          ${JSON.stringify({ previous, next })}
@@ -34,10 +36,10 @@ server({ port: 8000, views: 'src/views', favicon: 'public/favicon.ico' }, [
       .replace('</head>', script_template(epub.get_pagination(path), pagination_js))
 
     return (
-      ext  == 'html' ? type('html').send(insert_script(file)) :
-      file == null   ? status(404) :
-      ext  == null   ? send(file) :
-                       type(ext).send(file) )}
+      is_html(ext) ? type('html').send(insert_script(file)) :
+      file == null ? status(404) :
+      ext  == null ? send(file) :
+                     type(ext).send(file) )}
   ],
 )
 .catch(function retry(err) {
