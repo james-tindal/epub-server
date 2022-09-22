@@ -16,7 +16,9 @@ export default epubGot.then(() => ({
   get_pagination: path => {
     const { flow } = epubGetter
     const i = flow.findIndex(x => x.href == path)
-    return { previous: flow[i-1]?.href, next: flow[i+1]?.href }
+    return {
+      previous: '/' + flow[i-1]?.href,
+      next:     '/' + flow[i+1]?.href }
   }
 }))
 .catch(e => {throw e})
