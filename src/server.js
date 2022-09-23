@@ -46,11 +46,8 @@ const retry_incrementing_port = function retry(err) {
   return promise.then(() => init_ctx, retry)
 }
 
-const render_table_of_contents = render('toc.hbs', epub)
-
-
 server({ port: 8000, views: 'src/views', favicon: 'public/favicon.ico' }, [
-  get('/', () => render_table_of_contents),
+  get('/', () => render('toc.hbs', epub)),
   get_file_from_epub
 ])
 .catch(retry_incrementing_port)
