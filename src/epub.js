@@ -10,9 +10,10 @@ epubGetter.parse()
 const get_pagination = path => {
   const { flow } = epubGetter
   const i = flow.findIndex(x => x.href == path)
+  const get_href = x => x && '/' + x.href
   return {
-    previous: '/' + flow[i-1]?.href,
-    next:     '/' + flow[i+1]?.href }
+    previous: get_href(flow[i-1]),
+    next:     get_href(flow[i+1]) }
 }
 
 const get_file = _path => {
