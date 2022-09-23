@@ -7,23 +7,36 @@ const epubGetter = new EPub(file_path)
 const epubGot = once(epubGetter, 'end')
 epubGetter.parse()
 
+const get_pagination = path => {
+  const { flow } = epubGetter
+  const i = flow.findIndex(x => x.href == path)
+  return {
+    previous: '/' + flow[i-1]?.href,
+    next:     '/' + flow[i+1]?.href }
+}
+
+const get_file = _path => {
+  const path = _path.slice(1)
+  const body = epubGetter.zip.admZip.readFile(path)
+  const extension = path.match(/.\.([^.]*)$/)?.[1]
+  const no_ext = extension === undefined
+  const is_html = ['html', 'xhtml', 'htm'].includes(extension)
+  const pagination = is_html && get_pagination(path)
+
+  return epubGetter.zip.names.includes(path)
+  ? Promise.resolve({ path, body, extension, no_ext, is_html, pagination })
+  : Promise.reject()
+}
+
 export default epubGot.then(() => ({
   title: epubGetter.metadata.title,
   author: epubGetter.metadata.creator,
-  toc: toc_formatter(epubGetter),
-  get_file: path =>
-    epubGetter.zip.names.includes(path) ? epubGetter.zip.admZip.readFile(path) : undefined,
-  get_pagination: path => {
-    const { flow } = epubGetter
-    const i = flow.findIndex(x => x.href == path)
-    return {
-      previous: '/' + flow[i-1]?.href,
-      next:     '/' + flow[i+1]?.href }
-  }
+  toc: format_toc(epubGetter),
+  get_file
 }))
 .catch(e => {throw e})
 
-function toc_formatter(epubGetter) {
+function format_toc(epubGetter) {
   const last = arr => arr[arr.length-1]
   const acc = []
   const iter = epubGetter.toc[Symbol.iterator]()
