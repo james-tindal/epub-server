@@ -5,20 +5,19 @@ import path from 'node:path'
 const { get } = server.router
 const { render, send, status, type } = server.reply
 
+
 const epub = await get_epub
-const pagination_js = await fs.readFile(path.resolve('src/client.js'), 'utf8')
 
-
-const script_template = ({ previous, next }, js) =>
+const script_template = ({ previous, next }) =>
   `<script id="pagination" type="application/json">
     ${JSON.stringify({ previous, next })}
   </script>
-  <script>${js}</script>
+  <script src="/pagination.js"></script>
   </head>`
 
 const insert_script = (html, pagination) =>
   html.toString()
-  .replace('</head>', script_template(pagination, pagination_js))
+  .replace('</head>', script_template(pagination))
 
 const get_file_from_epub = ctx =>
   epub.get_file(ctx.path)
