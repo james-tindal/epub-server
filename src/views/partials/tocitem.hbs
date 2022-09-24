@@ -1,5 +1,5 @@
 
-<li>
+<li {{#if this.children}} class="closed" {{/if}} >
   <a href="{{ this.href }}">{{ this.title }}</a>
   <ul>
     {{#each this.children}}
