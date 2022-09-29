@@ -47,8 +47,8 @@ function format_toc(epubGetter) {
     cursor.push({ href: item.href, title: item.title, children: item.children }),
     next = iter.next(), item = next.value
   ) {
-    if (item.level > level) Open()
-    if (item.level < level) Close()
+    if    (item.level > level) Open()
+    while (item.level < level) Close()
   
     function Open() {
       // Create children array
