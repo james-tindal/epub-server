@@ -1,7 +1,5 @@
 import get_epub from './epub.js'
 import server from 'server'
-import fs from 'node:fs/promises'
-import path from 'node:path'
 const { get } = server.router
 const { render, send, status, type } = server.reply
 
