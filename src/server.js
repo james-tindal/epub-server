@@ -13,9 +13,13 @@ const script_template = ({ previous, next }) =>
   <script src="/pagination.js"></script>
   </head>`
 
-const insert_script = (html, pagination) =>
-  html.toString()
-  .replace('</head>', script_template(pagination))
+const insert_script = (html, pagination) => {
+  const h = html.toString()
+  return (
+    h.match(/<\/head>/i)    ? h.replace(/<\/head>/i   ,            script_template(pagination)) :
+    h.match(/<head\s*\/>/i) ? h.replace(/<head\s*\/>/i, '<head>' + script_template(pagination))
+                            : h.replace(/<body>/i     , '<head>' + script_template(pagination)) + '<body>' )
+}
 
 const get_file_from_epub = ctx =>
   epub.get_file(ctx.path)
