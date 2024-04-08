@@ -3,7 +3,7 @@
   <a href="{{ this.href }}">{{ this.title }}</a>
   <ul>
     {{#each this.children}}
-      {{> partials/tocitem}}
+      {{> partials/tocitem baseHref=baseHref}}
     {{/each}}
   </ul>
 </li>

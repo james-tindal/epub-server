@@ -1,10 +1,14 @@
-import get_epub from './epub.js'
 import server from 'server'
 const { get } = server.router
 const { render, send, status, type } = server.reply
+import { homedir } from 'node:os'
+import { resolve as concat_path } from 'node:path'
+import { fileURLToPath } from 'url'
+const project_dir = fileURLToPath(import.meta.resolve('..'))
+const relative_path = path => concat_path(project_dir, path)
 
+import { EpubNotFound, FolderNotFound, get_epub } from './epub.js'
 
-const epub = await get_epub
 
 const script_template = ({ previous, next }) =>
   `<script id="pagination" type="application/json">
@@ -21,37 +25,49 @@ const insert_script = (html, pagination) => {
                             : h.replace(/<body>/i     , '<head>' + script_template(pagination)) + '<body>' )
 }
 
-const get_file_from_epub = ctx =>
-  epub.get_file(ctx.path)
-  .then(
-    ({ is_html, no_ext, extension, body, pagination }) =>
-      is_html ? type('html').send(insert_script(body, pagination)) :
-      no_ext  ? send(body) :
-                type(extension).send(body),
-    (  ) =>     status(404).render('404.hbs') )
-
 let init_ctx
 server.plugins.push({
   name: 'Context stealer',
   init: ctx => init_ctx = ctx
 })
 
-const retry_incrementing_port = function retry(err) {
-  if (err.code !== 'EADDRINUSE') throw err
-  console.log(`Address in use, retrying on port ${++init_ctx.options.port}`)
-  const promise = new Promise((resolve, reject) => {
-    const server = init_ctx.server.listen(init_ctx.options.port)
-    server.on('listening', resolve)
-    server.on('error', reject)
-  })
-  return promise.then(() => init_ctx, retry)
+const calibre_library = concat_path(homedir(), 'Calibre Library')
+const colour = {
+  green: '\u001b[32m',
+  reset: "\u001b[0m"
 }
 
-server({ port: 8000, views: 'src/views', favicon: 'public/favicon.ico' }, [
-  get('/', () => render('toc.hbs', epub)),
-  get_file_from_epub
-])
-.catch(retry_incrementing_port)
-.then(ctx => console.log(`Listening on http://localhost:${ctx.options.port}`))
-.catch(e => { throw e })
+server({
+  port: 65535,
+  views: relative_path('src/views'),
+  public: relative_path('public'),
+  favicon: relative_path('public/favicon.ico'),
+}, [
+  ({ method, path }) => console.log(colour.green, method, path, colour.reset),
+  get('/', () => '<h1>Epub Server</h1>'),
+  // get('/:author', async ({ params: { author }}) => {/* Should show list of author's books */}),
+  // Table of contents
+  get('/:author/:book', async ({ params: { author, book }}) => {
+    const epub = await get_epub(calibre_library, author, book)
+    // Make this say if the author is not found or only the book
+    if (epub == FolderNotFound) return send('Book not found')
+    if (epub == EpubNotFound) return send('This book does not have an epub')
+    const toc = epub.get_toc()
+    return render('toc.hbs', toc)
+  }),
+  // Internal epub files
+  get('/:author/:book/*', async ({ params: { author, book, 0: internalPath } }) => {
+    const epub = await get_epub(calibre_library, author, book)
+    if (epub == FolderNotFound) return send('Book not found')
+    if (epub == EpubNotFound) return send('This book does not have an epub')
 
+    return epub.get_file(internalPath).then(
+      ({ is_html, no_ext, extension, body, pagination }) =>
+        is_html ? type('html').send(insert_script(body, pagination)) :
+        no_ext  ? send(body) :
+                  type(extension).send(body),
+      (  ) =>     status(404).render('404.hbs') )
+  })
+])
+.then(ctx => console.log(`Listening on http://localhost:65535/`))
+.catch(e => { throw e })
