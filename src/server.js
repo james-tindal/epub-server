@@ -62,10 +62,11 @@ server({
     if (epub == EpubNotFound) return send('This book does not have an epub')
 
     return epub.get_file(internalPath).then(
-      ({ is_html, no_ext, extension, body, pagination }) =>
-        is_html ? type('html').send(insert_script(body, pagination)) :
-        no_ext  ? send(body) :
-                  type(extension).send(body),
+      ({ is_html, is_xhtml, no_ext, extension, body, pagination }) =>
+        is_html  ? type( 'html').send(insert_script(body, pagination)) :
+        is_xhtml ? type('xhtml').send(insert_script(body, pagination)) :
+        no_ext   ? send(body) :
+                   type(extension).send(body),
       (  ) =>     status(404).render('404.hbs') )
   })
 ])

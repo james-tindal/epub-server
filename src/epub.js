@@ -17,11 +17,12 @@ const get_file = (epubGetter, baseHref) => path => {
   const body = epubGetter.zip.admZip.readFile(path)
   const extension = path.match(/.\.([^.]*)$/)?.[1]
   const no_ext = extension === undefined
-  const is_html = ['html', 'xhtml', 'htm'].includes(extension)
-  const pagination = is_html && get_pagination(epubGetter, baseHref, path)
+  const is_html = ['html', 'htm'].includes(extension)
+  const is_xhtml = extension === 'xhtml'
+  const pagination = (is_html || is_xhtml) && get_pagination(epubGetter, baseHref, path)
 
   return epubGetter.zip.names.includes(path)
-  ? Promise.resolve({ path, body, extension, no_ext, is_html, pagination })
+  ? Promise.resolve({ path, body, extension, no_ext, is_html, is_xhtml, pagination })
   : Promise.reject()
 }
 
