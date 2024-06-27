@@ -1,11 +1,10 @@
 import { readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { once } from 'node:events'
 import EPub from 'epub'
 
 
-const get_pagination = (epubGetter, baseHref, path) => {
-  const { flow } = epubGetter
+const get_pagination = (epub, baseHref, path) => {
+  const { flow } = epub
   const i = flow.findIndex(x => x.href == path)
   const get_href = x => x && baseHref + x.href
   return {
@@ -13,14 +12,14 @@ const get_pagination = (epubGetter, baseHref, path) => {
     next:     get_href(flow[i+1]) }
 }
 
-const get_file = (epubGetter, baseHref) => path => {
-  const body = epubGetter.zip.admZip.readFile(path)
+const get_file = (epub, baseHref) => path => {
+  const body = epub.zip.admZip.readFile(path)
   const extension = path.match(/.\.([^.]*)$/)?.[1]
   const no_ext = extension === undefined
   const is_html = ['html', 'xhtml', 'htm'].includes(extension)
-  const pagination = is_html && get_pagination(epubGetter, baseHref, path)
+  const pagination = is_html && get_pagination(epub, baseHref, path)
 
-  return epubGetter.zip.names.includes(path)
+  return epub.zip.names.includes(path)
   ? Promise.resolve({ path, body, extension, no_ext, is_html, pagination })
   : Promise.reject()
 }
@@ -42,23 +41,18 @@ export const get_epub = async (calibre_library, author, book) => {
 
   if (typeof epubPath != 'string') return epubPath
 
-  const epubGetter = new EPub(epubPath)
-  // const epubGot = once(epubGetter, 'end')
-  epubGetter.parse()
-  // await epubGot
-  await once(epubGetter, 'end')
-
+  const epub = await parse_epub(epubPath)
 
   return {
-    get_toc: () => get_toc(epubGetter, baseHref),
-    get_file: get_file(epubGetter, baseHref)
+    get_toc: () => get_toc(epub, baseHref),
+    get_file: get_file(epub, baseHref)
   }
 }
 
-function get_toc(epubGetter, baseHref) {
+function get_toc(epub, baseHref) {
   const last = arr => arr[arr.length-1]
   const acc = []
-  const iter = epubGetter.toc[Symbol.iterator]()
+  const iter = epub.toc[Symbol.iterator]()
   for (
     let cursor = acc, level = 0, next = iter.next(), item = next.value;
     !next.done;
@@ -80,5 +74,14 @@ function get_toc(epubGetter, baseHref) {
       level--
     }
   }
-  return { toc: acc, ...epubGetter.metadata }
+  return { toc: acc, ...epub.metadata }
 }
+
+const parse_epub = filePath =>
+  new Promise((resolve, reject) => {
+    const epub = new EPub(filePath)
+    epub
+      .on('end', () => resolve(epub))
+      .on('error', reject)
+      .parse()
+  })
