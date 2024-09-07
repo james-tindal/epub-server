@@ -1,11 +1,13 @@
 {
   "main": "src/server.js",
   "scripts": {
-    "start": "nodemon src/server.js"
+    "start": "node src/server.js",
+    "prepare-nginx": "cp nginx.conf /usr/local/etc/nginx",
+    "add-domain-to-hosts": "grep -q library.local /etc/hosts || echo 127.0.0.1 library.local | sudo tee -a /etc/hosts"
   },
   "dependencies": {
     "epub": "^1.2.1",
-    "nodemon": "^2.0.20",
+    "handlebars": "^4.7.8",
     "server": "^1.0.37"
   },
   "type": "module"
