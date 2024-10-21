@@ -15,3 +15,10 @@ li.open > ul { display: block }
 li.closed, li.open { cursor: pointer }
 
 ul { cursor: initial }
+
+body {
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 14pt;
+}

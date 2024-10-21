@@ -7,19 +7,20 @@ import { homedir } from 'node:os'
 import { EpubNotFound, FolderNotFound, get_epub } from './epub.js'
 
 
-const script_template = ({ previous, next }) =>
+const head_template = ({ previous, next }) =>
   `<script id="pagination" type="application/json">
     ${JSON.stringify({ previous, next })}
   </script>
   <script src="/pagination.js"></script>
+  <link rel="stylesheet" href="/page.css">
   </head>`
 
-const insert_script = (html, pagination) => {
+const insert_into_head = (html, pagination) => {
   const h = html.toString()
   return (
-    h.match(/<\/head>/i)    ? h.replace(/<\/head>/i   ,            script_template(pagination)) :
-    h.match(/<head\s*\/>/i) ? h.replace(/<head\s*\/>/i, '<head>' + script_template(pagination))
-                            : h.replace(/<body>/i     , '<head>' + script_template(pagination)) + '<body>' )
+    h.match(/<\/head>/i)    ? h.replace(/<\/head>/i   ,            head_template(pagination)) :
+    h.match(/<head\s*\/>/i) ? h.replace(/<head\s*\/>/i, '<head>' + head_template(pagination))
+                            : h.replace(/<body>/i     , '<head>' + head_template(pagination)) + '<body>' )
 }
 
 const calibre_library = concat_path(homedir(), 'Calibre Library')
@@ -50,7 +51,7 @@ export const router = [
 
     return epub.get_file(internalPath).then(
       ({ is_html, no_ext, extension, body, pagination }) =>
-        is_html ? type('html').send(insert_script(body, pagination)) :
+        is_html ? type('html').send(insert_into_head(body, pagination)) :
         no_ext  ? send(body) :
                   type(extension).send(body),
       (  ) =>     status(404).render('404.hbs') )
