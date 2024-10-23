@@ -3,7 +3,8 @@
   "scripts": {
     "start": "node src/server.js",
     "prepare-nginx": "cp nginx.conf /usr/local/etc/nginx",
-    "add-domain-to-hosts": "grep -q library.local /etc/hosts || echo 127.0.0.1 library.local | sudo tee -a /etc/hosts"
+    "hosts-add": "node src/manage-hosts.js add",
+    "hosts-remove": "node src/manage-hosts.js remove"
   },
   "dependencies": {
     "epub": "^1.2.1",

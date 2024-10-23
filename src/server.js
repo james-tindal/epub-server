@@ -1,16 +1,16 @@
 import server from 'server'
 import { resolve as concat_path } from 'node:path'
-import fs, { readFileSync as readFile, writeFileSync as writeFile } from 'node:fs'
+import { readFileSync as readFile, writeFileSync as writeFile } from 'node:fs'
 import { execSync as exec } from 'node:child_process'
 import { fileURLToPath } from 'url'
 import Handlebars from 'handlebars'
 
 import { router } from './router.js'
+import localDomain from './local-domain.js'
 
 const project_dir = fileURLToPath(import.meta.resolve('..'))
 const relative_path = path => concat_path(project_dir, path)
 
-const localDomain = 'library.local'
 const socket = `/tmp/${localDomain}.sock`
 
 
